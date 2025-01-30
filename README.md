@@ -1,11 +1,11 @@
 ## MANGO TESTNET AUTO BOT
 
-**Register** : [HERE](https://task.testnet.mangonetwork.io/?invite=d9q5MS)
+**Register** : [HERE](https://task.testnet.mangonetwork.io/?invite=FzgEdD)
 
 - [Download Mango Wallet Extension](https://chromewebstore.google.com/detail/mango-wallet/jiiigigdinhhgjflhljdkcelcjfmplnd)
 - Backup Phrase
 - Claim Faucet on your Wallet extension
-- Go To [Web](https://task.testnet.mangonetwork.io/?invite=d9q5MS) 
+- Go To [Web](https://task.testnet.mangonetwork.io/?invite=FzgEdD) 
 - Complete Bind Social Media Accounts and JOIN NOW
 - Go to [Event Page](https://task.testnet.mangonetwork.io/events)
 - Complete Task on the Task List ( Swap , Bridge )
@@ -26,7 +26,7 @@
 - Proxy Support
 - Daily Claim Faucet
 - Daily Mango Swap 
-- Daily BeingDex Beta DAPP
+- Daily BeingDex DAPP
 - Daily Check In
 - Daily Bridge 
 
