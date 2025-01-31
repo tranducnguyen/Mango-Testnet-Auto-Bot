@@ -24,8 +24,6 @@ export async function operation(account) {
       await coreService.addStep(coreService.beingAppTask.detail.ID, coreService.beingAppTask.step[0]);
       await coreService.getFaucet();
     }
-    
-
 
     await coreService.getSwapTask();
     if (coreService.swapTask.step.find(step => step.status === '0')) {
@@ -88,7 +86,11 @@ export async function operation(account) {
       await coreService.getMangoUser(true);
     }
 
+    await coreService.DoClaimCard();
+
     await Helper.delay(1000, account, `Accounts Processing Complete, Delaying For ${Helper.msToTime(1000)}...`, coreService);
+
+
   } catch (error) {
     logger.info(error.message);
     await Helper.delay(5000, account, error.message, coreService);
@@ -102,12 +104,12 @@ export async function startBot() {
     if (accountList.length === 0) {
       throw new Error("Please input your account first in accounts.js file");
     }
-    // for (let i = 0; i < accountList.length; i++) {
-    //   logger.info(`BOT ${i + 1} STARTED`);
-    //   await operation(accountList[i]);
-    // }
-    const operations = accountList.map(account => operation(account));
-    await Promise.all(operations);
+    for (let i = 0; i < accountList.length; i++) {
+      logger.info(`BOT ${i + 1} STARTED`);
+      await operation(accountList[i]);
+    }
+    // const operations = accountList.map(account => operation(account));
+    // await Promise.all(operations);
   } catch (error) {
     logger.info("BOT STOPPED");
     logger.error(JSON.stringify(error));

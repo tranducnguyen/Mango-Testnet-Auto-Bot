@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { startBot } from './app/index.js';
+import logger from './app/src/utils/logger.js';
 async function copyFolder(src, dest) {
   try {
     await fs.promises.mkdir(dest, { recursive: true });

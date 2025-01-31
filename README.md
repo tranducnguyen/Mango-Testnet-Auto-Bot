@@ -29,6 +29,7 @@
 - Daily BeingDex DAPP
 - Daily Check In
 - Daily Bridge 
+- Open Card
 
 ## SETUP & CONFIGURE BOT
 

@@ -18,6 +18,7 @@ import { Config } from '../../config/config.js';
 import logger from '../utils/logger.js';
 import { ERC1967BSCPROXY } from '../abi/erc1967_proxy_bsc.js';
 import { ETH_MGO_ABI } from "../abi/ethabi.js";
+import { CARD_PACKAGE } from '../packages/card.js';
 
 export class CoreService extends API {
   constructor(seedPhrase) {
@@ -32,8 +33,9 @@ export class CoreService extends API {
     //   throw new Error(`You have ${accountList.length} accounts,  ${Config.BRIDGERAWDATA.length} BRIDGERAWDATA`);
     // }
     const accountIndex = accountList.indexOf(seedPhrase);
-    const proxy = proxyList.length === accountList.length ? proxyList[accountIndex] : undefined;
+    const proxy = proxyList.length >= accountList.length ? proxyList[accountIndex] : undefined;
     super(proxy);
+    this.accountIndex = accountIndex;
     this.acc = seedPhrase;
     this.client = new MgoClient({
       transport: new MgoHTTPTransport({
@@ -294,6 +296,45 @@ export class CoreService extends API {
     }
   }
 
+  async fetchRemainingCards() {
+    try {
+      await Helper.delay(1000, this.acc, "Requesting Remain Card", this);
+      const response = await this.request("https://task-api.testnet.mangonetwork.io/mgoCardLog/getRemainingMgoCardLogPublic", "GET", undefined, this.token);
+      if (response.status === 200) {
+        await Helper.delay(1000, this.acc, response.data.msg, this);
+        return response.data.data;
+      } else {
+        throw response;
+      }
+    } catch (error) {
+      if (error.msg) {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      } else {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      }
+    }
+  }
+
+
+  async getMgoCardEventID() {
+    try {
+      await Helper.delay(500, this.acc, "Requesting Card ID", this);
+      const response = await this.request("https://task-api.testnet.mangonetwork.io/mgoCardLog/getMgoCardEventID", "POST", {}, this.token);
+      if (response.status === 200) {
+        await Helper.delay(1000, this.acc, response.data.msg, this);
+        return response.data.data;
+      } else {
+        throw response;
+      }
+    } catch (error) {
+      if (error.msg) {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      } else {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      }
+    }
+  }
+
   async checkIn() {
     try {
       await Helper.delay(1000, this.acc, "Trying to Daily Sign In", this);
@@ -306,6 +347,92 @@ export class CoreService extends API {
       await Helper.delay(1000, this.acc, "Successfully Daily Sign In", this);
     } catch (error) {
       await Helper.delay(1000, this.acc, "Failed to Daily Sign In, possibly already signed in", this);
+    }
+  }
+
+  async DoClaimCard() {
+    try {
+      const resp = await this.fetchRemainingCards();
+      if (resp.Remaining === 0) {
+        logger.info(`Account ${this.accountIndex}: No Remaining Cards`);
+        return;
+      }
+
+      const cardEvent = await this.getMgoCardEventID();
+      if (!cardEvent.eventID || cardEvent.eventID === "") {
+        logger.info(`Account ${this.accountIndex}: No Card Event ID`);
+        return;
+      }
+      this.eventID = cardEvent.eventID;
+      await this.claimCard();
+    } catch (error) {
+      await Helper.delay(1000, this.acc, "Failed to claim card", this);
+    } finally {
+      this.eventID = "";
+    }
+  }
+
+  async claimCard() {
+    try {
+      const txBlock = new TransactionBlock();
+      txBlock.moveCall({
+        target: `${CARD_PACKAGE.ADDRESS}::card::open`,
+        arguments: [txBlock.object(CARD_PACKAGE.CARDPOOL), txBlock.object(this.eventID)]
+      });
+      await this.executeTx(txBlock);
+      await Helper.delay(1000, this.acc, "Successfully Create Transaction", this);
+      const data = await this.fetchCardStatus(this.eventID);
+      if (data.status !== 1) {
+        return;
+      }
+
+      const dataReward = await this.fetchCardRandom(this.eventID);
+      if (!dataReward.cardLogs || dataReward.cardLogs.length === 0) {
+        await Helper.delay(1000, this.acc, "No Card Reward Found", this);
+        return;
+      }
+
+      const cardReward = dataReward.cardLogs[0];
+      await Helper.delay(1000, this.acc, `Get reward ${cardReward.reward}`, this);
+      await this.getBalance();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async fetchCardStatus(eventID) {
+    try {
+      await Helper.delay(500, this.acc, "Requesting Card Status", this);
+      const response = await this.request("https://task-api.testnet.mangonetwork.io/mgoCardLog/getMgoCardEventIDStatus", "POST", { "eventID": eventID }, this.token);
+      if (response.status === 200) {
+        return response.data.data;
+      } else {
+        throw response;
+      }
+    } catch (error) {
+      if (error.msg) {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      } else {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      }
+    }
+  }
+
+  async fetchCardRandom(eventID) {
+    try {
+      await Helper.delay(500, this.acc, "Requesting Card Random", this);
+      const response = await this.request("https://task-api.testnet.mangonetwork.io/mgoCardLog/getMgoCardRandom", "POST", { "eventID": eventID, "allIn": false }, this.token);
+      if (response.status === 200) {
+        return response.data.data;
+      } else {
+        throw response;
+      }
+    } catch (error) {
+      if (error.msg) {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      } else {
+        await Helper.delay(3000, this.acc, error.data.msg, this);
+      }
     }
   }
 
